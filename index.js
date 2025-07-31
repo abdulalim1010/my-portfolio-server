@@ -20,6 +20,7 @@ const client = new MongoClient(uri, {
 });
 
 let contactCollection;
+let usersCollection;
 
 async function run() {
   try {
@@ -27,6 +28,7 @@ async function run() {
 
     const db = client.db("portfolioDB");
     contactCollection = db.collection("contacts");
+     usersCollection = db.collection("users");
 
     console.log("✅ Connected to MongoDB");
   } catch (err) {
@@ -42,6 +44,31 @@ app.get("/", (req, res) => {
 });
 
 // Pagination example route
+//users
+app.post("/users", async (req, res) => {
+  const user = req.body;
+  try {
+    const existingUser = await usersCollection.findOne({ email: user.email });
+    if (!existingUser) {
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    } else {
+      res.send({ message: "User already exists" });
+    }
+  } catch (err) {
+    res.status(500).send({ error: "Failed to save user" });
+  }
+});
+//user role checke
+app.get("/users/:email", async (req, res) => {
+  const email = req.params.email;
+  const user = await usersCollection.findOne({ email });
+
+  if (!user) return res.status(404).send({ message: "User not found" });
+
+  res.send({ role: user.role });
+});
+
 // Existing GET route
 app.get("/contacts", async (req, res) => {
   const page = parseInt(req.query.page) || 1;
