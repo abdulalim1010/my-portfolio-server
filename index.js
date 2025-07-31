@@ -44,6 +44,14 @@ app.get("/", (req, res) => {
 });
 
 // Pagination example route
+app.get("/users", async (req, res) => {
+  try {
+    const users = await usersCollection.find().toArray();
+    res.send(users);
+  } catch (err) {
+    res.status(500).send({ error: "Failed to fetch users" });
+  }
+});
 //users
 app.post("/users", async (req, res) => {
   const user = req.body;
@@ -68,6 +76,21 @@ app.get("/users/:email", async (req, res) => {
 
   res.send({ role: user.role });
 });
+
+
+app.post("/users", async (req, res) => {
+  const user = req.body;
+  user.createdAt = new Date();
+
+  const existingUser = await usersCollection.findOne({ email: user.email });
+  if (!existingUser) {
+    const result = await usersCollection.insertOne(user);
+    res.send(result);
+  } else {
+    res.send({ message: "User already exists" });
+  }
+});
+
 
 // Existing GET route
 app.get("/contacts", async (req, res) => {
@@ -97,6 +120,7 @@ app.get("/contacts", async (req, res) => {
 app.post("/contacts", async (req, res) => {
   try {
     const contact = req.body;
+     contact.date = new Date();
     const result = await contactCollection.insertOne(contact);
     res.status(201).send(result);
   } catch (err) {
