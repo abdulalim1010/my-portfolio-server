@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion,ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 
@@ -21,6 +21,8 @@ const client = new MongoClient(uri, {
 
 let contactCollection;
 let usersCollection;
+let projectsCollection;
+
 
 async function run() {
   try {
@@ -28,7 +30,8 @@ async function run() {
 
     const db = client.db("portfolioDB");
     contactCollection = db.collection("contacts");
-     usersCollection = db.collection("users");
+    usersCollection = db.collection("users");
+     projectsCollection = db.collection("projects"); 
 
     console.log("✅ Connected to MongoDB");
   } catch (err) {
@@ -52,7 +55,7 @@ app.get("/users", async (req, res) => {
     res.status(500).send({ error: "Failed to fetch users" });
   }
 });
-//users
+//usersno
 app.post("/users", async (req, res) => {
   const user = req.body;
   try {
@@ -88,6 +91,70 @@ app.post("/users", async (req, res) => {
     res.send(result);
   } else {
     res.send({ message: "User already exists" });
+  }
+});
+
+
+
+//projects
+
+app.get("/projects", async (req, res) => {
+  try {
+    const projects = await projectsCollection.find().toArray();
+    res.send(projects);
+  } catch (err) {
+    res.status(500).send({ error: "Failed to fetch projects" });
+  }
+});
+
+// Add New Project
+app.post("/projects", async (req, res) => {
+  try {
+    const project = req.body;
+    const result = await projectsCollection.insertOne(project);
+    res.status(201).send(result);
+  } catch (err) {
+    res.status(500).send({ error: "Failed to save project" });
+  }
+});
+
+// Update Project
+app.put("/projects/:id", async (req, res) => {
+  const { id } = req.params;
+  const updatedProject = req.body;
+  try {
+    const result = await projectsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedProject }
+    );
+    res.send(result);
+  } catch (err) {
+    res.status(500).send({ error: "Failed to update project" });
+  }
+});
+
+// Delete Project
+app.delete("/projects/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await projectsCollection.deleteOne({ _id: new ObjectId(id) });
+    res.send(result);
+  } catch (err) {
+    res.status(500).send({ error: "Failed to delete project" });
+  }
+});
+// Publish Project
+// PUT /projects/publish/:id
+app.put("/projects/publish/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await projectsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { published: true } }
+    );
+    res.send(result);
+  } catch (err) {
+    res.status(500).send({ error: "Failed to publish project" });
   }
 });
 
