@@ -94,9 +94,12 @@ app.post("/users", async (req, res) => {
   }
 });
 
+//publis
+// Show only published projects in public route
 
 
 //projects
+//
 
 app.get("/projects", async (req, res) => {
   try {
